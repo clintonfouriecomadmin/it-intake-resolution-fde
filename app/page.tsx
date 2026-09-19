@@ -13,6 +13,11 @@ interface ClassificationRow {
   confidence: number;
 }
 
+interface RoutingDecision {
+  queue: "standard" | "priority";
+  reason: string;
+}
+
 export default function IntakePage() {
   const [rawText, setRawText] = useState("");
   const [submitter, setSubmitter] = useState("");
@@ -20,6 +25,7 @@ export default function IntakePage() {
   const [submittedUrgency, setSubmittedUrgency] = useState("medium");
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<ClassificationRow | null>(null);
+  const [routing, setRouting] = useState<RoutingDecision | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
   async function handleSubmit(e: FormEvent) {
@@ -27,6 +33,7 @@ export default function IntakePage() {
     setStatus("submitting");
     setErrorMsg("");
     setResult(null);
+    setRouting(null);
 
     try {
       const ticketRes = await fetch("/api/tickets", {
@@ -54,6 +61,16 @@ export default function IntakePage() {
       if (!classifyRes.ok) throw new Error(classifyData.error || "Classification failed");
 
       setResult(classifyData.classification);
+
+      const resolveRes = await fetch("/api/resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticket_id: ticketData.ticket.id }),
+      });
+      const resolveData = await resolveRes.json();
+      if (!resolveRes.ok) throw new Error(resolveData.error || "Routing failed");
+
+      setRouting(resolveData.decision);
       setStatus("done");
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -156,11 +173,22 @@ export default function IntakePage() {
           <p>
             <strong>Confidence:</strong> {(result.confidence * 100).toFixed(0)}%
           </p>
-          <p style={{ fontStyle: "italic", color: "#666", marginBottom: 0 }}>
-            Routing (auto-resolve vs. human review) is built in M3 — this
-            step only shows what the classifier understood, nothing has been
-            acted on yet.
-          </p>
+          {routing && (
+            <>
+              <hr />
+              <p>
+                <strong>Queue:</strong>{" "}
+                {routing.queue === "priority" ? "🔺 Priority review" : "Standard queue"}
+              </p>
+              <p style={{ color: "#666", marginBottom: 0 }}>{routing.reason}</p>
+              <p style={{ fontStyle: "italic", color: "#666" }}>
+                Either way, a human still sets priority, assigns a
+                technician, and approves any escalation — this system never
+                closes a ticket unsupervised. The review queue itself is
+                built in M4.
+              </p>
+            </>
+          )}
         </div>
       )}
     </main>

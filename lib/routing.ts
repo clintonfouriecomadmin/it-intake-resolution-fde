@@ -1,62 +1,58 @@
 // Deterministic routing logic — NO AI calls in this file.
 //
 // This encodes the AI responsibility boundary agreed with the stakeholder
-// in M0 (docs/discovery-brief.md, section 6). Confidence score alone never
-// authorises auto-execution of anything except categorisation and issue
-// extraction. Priority, assignment, and escalation always route to the
-// human review queue, regardless of how confident the classifier is.
+// in M0 (docs/discovery-brief.md, section 6): priority, assignment, and
+// escalation ALWAYS require human approval, regardless of classification
+// confidence. There is no fully-automated resolution path in this system —
+// what varies is which queue a ticket lands in, i.e. how urgently a human
+// needs to look at it.
+//
+// (Note: an earlier version of this file used "auto_resolve" as an outcome,
+// which implied the system could close a ticket unsupervised. That
+// contradicted the discovery interview and was corrected in M3 — see
+// docs/build-journal.md.)
 
 import { ClassificationResult, TicketCategory } from "./classification";
 
 // Categories that are always treated as high-stakes per the discovery
-// interview (section 3): ERP-wide outages, production-floor systems,
-// security issues near month-end, and anything with exec/site-manager
-// involvement. Hardcoded here rather than left to the model's judgment.
+// interview (section 3): ERP-wide outages and access/security issues near
+// month-end. Hardcoded here rather than left to the model's judgment.
 export const HIGH_STAKES_CATEGORIES: TicketCategory[] = ["erp", "access"];
 
-export const ACTIONS_ELIGIBLE_FOR_AUTO_EXECUTION = [
-  "categorise",
-  "extract_issue",
-] as const;
+// Below this confidence, a low-stakes-looking category still gets bumped to
+// the priority queue for a human to double-check the categorisation itself —
+// this is the guard against a repeat of the "buried ERP line" incident from
+// discovery, where a misread ticket sat for half a day.
+const CONFIDENCE_THRESHOLD = 0.75;
 
-export const ACTIONS_REQUIRING_HUMAN_APPROVAL = [
-  "assign_technician",
-  "set_priority",
-  "escalate",
-  "request_missing_info",
-] as const;
+export type Queue = "standard" | "priority";
 
-export type RoutingDecision = {
-  route: "auto_resolve" | "human_review";
+export interface RoutingDecision {
+  queue: Queue;
   reason: string;
-};
+}
 
 export function decideRouting(
   classification: ClassificationResult
 ): RoutingDecision {
-  // M3: implement the full rule set. Skeleton below shows the two
-  // conditions already known from discovery — flesh out thresholds
-  // and additional rules during M3.
-
   if (HIGH_STAKES_CATEGORIES.includes(classification.category)) {
     return {
-      route: "human_review",
-      reason: `Category '${classification.category}' is always high-stakes per discovery brief`,
+      queue: "priority",
+      reason: `Category '${classification.category}' is always high-stakes per discovery brief section 3`,
     };
   }
 
-  // Placeholder confidence threshold — revisit and justify in
-  // docs/evaluation.md during M3/M6.
-  const CONFIDENCE_THRESHOLD = 0.75;
   if (classification.confidence < CONFIDENCE_THRESHOLD) {
     return {
-      route: "human_review",
-      reason: `Confidence ${classification.confidence} below threshold ${CONFIDENCE_THRESHOLD}`,
+      queue: "priority",
+      reason: `Confidence ${classification.confidence.toFixed(
+        2
+      )} below threshold ${CONFIDENCE_THRESHOLD} — categorisation itself needs a human check`,
     };
   }
 
   return {
-    route: "auto_resolve",
+    queue: "standard",
     reason: "Low-stakes category, confidence above threshold",
   };
 }

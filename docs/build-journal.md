@@ -58,3 +58,36 @@ returns a 502 rather than a fabricated classification. Per the discovery
 brief, a failed or low-confidence classification should be treated the same
 as "route to human" once M3 adds that logic — never silently guess.
 
+## M3 — Deterministic Routing (2026-09-19)
+
+Caught a real modeling mistake before it compounded. The M1 scaffold of
+`lib/routing.ts` used `"auto_resolve"` as one of two outcomes, alongside
+`"human_review"`. Going back to re-read the discovery brief while
+implementing this properly, that's wrong: Alex was explicit that priority,
+assignment, and escalation always require human approval, regardless of
+confidence. Nothing in this system is supposed to close a ticket
+unsupervised — full stop.
+
+So there's no "auto_resolve" outcome at all. What the routing logic actually
+decides is which of two human queues a ticket lands in: a standard queue for
+routine review at normal pace, or a priority queue when the category is
+high-stakes (ERP, access) or the classifier's confidence is too low to trust
+even the categorisation. Renamed the routing outcome to `queue: "standard" |
+"priority"` and updated the audit log vocabulary to match (`queued_standard`
+/ `queued_priority`, `decided_by: "system"` rather than `"ai"`, since routing
+is plain rule-based code, not a model call).
+
+This is worth being honest about rather than quietly fixing and forgetting:
+it's an easy mistake to make when a system shape looks like a natural
+"auto vs. escalate" binary but the actual stakeholder constraint is more
+specific than that. Re-reading the source interview instead of working from
+my own summary of it is what caught it.
+
+Also decided the confidence threshold (0.75) triggers a priority-queue
+routing even for otherwise low-stakes categories, not just high-stakes ones
+— a low-confidence categorisation is itself the failure mode that caused the
+original buried-ERP-ticket incident in discovery, so it gets the same
+treatment as a high-stakes category. This threshold is a placeholder;
+justifying or tuning it belongs in `docs/evaluation.md` (M6), not decided
+silently in code.
+
