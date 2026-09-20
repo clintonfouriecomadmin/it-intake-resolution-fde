@@ -57,17 +57,15 @@ const responseSchema = {
   required: ["category", "extracted_issue", "confidence"],
 } as const;
 
-let cachedClient: GoogleGenAI | null = null;
-
 function getClient(): GoogleGenAI {
-  if (!cachedClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not set");
-    }
-    cachedClient = new GoogleGenAI({ apiKey });
+  // Read the key on every call. A module-level client would keep serving
+  // the first key loaded in this process, so a rotated or deliberately
+  // invalid GEMINI_API_KEY in .env.local would be ignored until restart.
+  const apiKey = process.env["GEMINI_API_KEY"];
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set");
   }
-  return cachedClient;
+  return new GoogleGenAI({ apiKey });
 }
 
 export async function classifyTicket(

@@ -43,7 +43,7 @@ export default function ReviewPage() {
     setLoading(true);
     setErrorMsg("");
     try {
-      const res = await fetch("/api/review-queue");
+      const res = await fetch("/api/review-queue", { cache: "no-store" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load queue");
 
@@ -129,7 +129,10 @@ export default function ReviewPage() {
             onChange={(e) => setReviewerName(e.target.value)}
             placeholder="Your name"
           />
-        </label>
+        </label>{" "}
+        <button type="button" onClick={loadQueue} disabled={loading}>
+          {loading ? "Loading…" : "Reload queue"}
+        </button>
       </div>
 
       {errorMsg && <p style={{ color: "crimson" }}>Error: {errorMsg}</p>}
