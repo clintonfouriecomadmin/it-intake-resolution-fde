@@ -5,11 +5,15 @@
 // The service-role key must never be exposed to the client.
 
 import { NextResponse } from "next/server";
-import { getServiceClient } from "@/lib/supabaseServer";
+import { createClient } from "@supabase/supabase-js";
+import { parseJsonBody } from "@/lib/http";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-export const fetchCache = "force-no-store";
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function GET() {
   const supabase = getServiceClient();
@@ -25,7 +29,17 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  const { data: body, error: parseError } = await parseJsonBody<{
+    raw_text?: string;
+    submitter?: string;
+    channel?: string;
+    submitted_urgency?: string;
+  }>(request);
+
+  if (parseError || !body) {
+    return NextResponse.json({ error: parseError }, { status: 400 });
+  }
+
   const { raw_text, submitter, channel, submitted_urgency } = body;
 
   if (!raw_text || typeof raw_text !== "string") {

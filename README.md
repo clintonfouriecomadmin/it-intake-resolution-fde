@@ -9,9 +9,9 @@ Built as a portfolio project demonstrating Forward-Deployed Engineering
 practices: deterministic-vs-AI decision splitting, human-in-the-loop design,
 and grounding in a real (simulated) stakeholder discovery process.
 
-**Status:** M5 — dashboard built. Headline metric is % of priority tickets
-reviewed within 15 minutes, taken directly from the discovery brief's stated
-success criteria. Failure-mode testing and polish not yet done (M6).
+**Status:** M6 — deliberate failure testing done, two real bugs found and
+fixed (see [Evaluation](docs/evaluation.md)). Documentation pass and case
+study site remain (M7, M8).
 
 - Live demo: _added in M8_
 - Case study: _added in M8_

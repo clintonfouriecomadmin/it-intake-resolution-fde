@@ -26,6 +26,7 @@ export default function IntakePage() {
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<ClassificationRow | null>(null);
   const [routing, setRouting] = useState<RoutingDecision | null>(null);
+  const [aiFailed, setAiFailed] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   async function handleSubmit(e: FormEvent) {
@@ -34,6 +35,7 @@ export default function IntakePage() {
     setErrorMsg("");
     setResult(null);
     setRouting(null);
+    setAiFailed(false);
 
     try {
       const ticketRes = await fetch("/api/tickets", {
@@ -61,6 +63,7 @@ export default function IntakePage() {
       if (!classifyRes.ok) throw new Error(classifyData.error || "Classification failed");
 
       setResult(classifyData.classification);
+      setAiFailed(!!classifyData.aiFailed);
 
       const resolveRes = await fetch("/api/resolve", {
         method: "POST",
@@ -164,6 +167,20 @@ export default function IntakePage() {
           }}
         >
           <h2 style={{ marginTop: 0 }}>Classification result</h2>
+          {aiFailed && (
+            <p
+              style={{
+                background: "#fff3cd",
+                padding: "0.5rem",
+                borderRadius: 4,
+                color: "#664d03",
+              }}
+            >
+              ⚠️ The AI classifier was unavailable, so this ticket was sent
+              straight to priority review rather than guessed at. A human
+              will assess it manually.
+            </p>
+          )}
           <p>
             <strong>Category:</strong> {result.category}
           </p>

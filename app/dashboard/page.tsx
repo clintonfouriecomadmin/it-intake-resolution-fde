@@ -23,35 +23,22 @@ export default function DashboardPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(true);
 
-  async function loadMetrics() {
-    setLoading(true);
-    setErrorMsg("");
-    try {
-      const res = await fetch("/api/metrics", { cache: "no-store" });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setMetrics(data.metrics);
-    } catch (err: any) {
-      setErrorMsg(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    loadMetrics();
+    fetch("/api/metrics")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) throw new Error(data.error);
+        setMetrics(data.metrics);
+      })
+      .catch((err) => setErrorMsg(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
     <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: 800 }}>
       <h1>Dashboard</h1>
-      <p>
-        <button type="button" onClick={loadMetrics} disabled={loading}>
-          {loading ? "Loading…" : "Refresh"}
-        </button>
-      </p>
 
-      {loading && !metrics && <p>Loading…</p>}
+      {loading && <p>Loading…</p>}
       {errorMsg && <p style={{ color: "crimson" }}>Error: {errorMsg}</p>}
 
       {metrics && (

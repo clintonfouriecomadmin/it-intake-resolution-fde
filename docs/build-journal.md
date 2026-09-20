@@ -133,3 +133,59 @@ the audit log, at the cost of recomputing on every dashboard load. Worth
 revisiting if ticket volume ever got large enough for that to matter, which
 it deliberately hasn't been asked to here.
 
+## Process note — file sync drift between M4 and M6 (2026-09-19)
+
+Discovered during ad-hoc testing that `/review` was still showing the M1
+placeholder page, days after M4 was supposedly built. Root cause: manually
+copying "the files listed as changed" from each milestone's zip, rather
+than reconciling the whole tree. Two files (`app/review/page.tsx` and its
+two API routes) simply never got copied over — an easy, silent miss with no
+error to surface it. The dashboard's 0-classified-count reading on the same
+screenshot was very likely stale test data from before classification was
+fully wired, not a second real bug.
+
+This is a real infrastructure lesson, not a coding one: manual multi-file
+sync degrades silently as a project grows, and "I copied the files I was
+told to" isn't verification. Fixed by reconciling the full extracted
+scaffold against the working tree (create missing, overwrite changed, never
+silently delete) and reporting exactly what changed — the same
+diagnose-before-fix, verify-don't-trust discipline from the Clinton & Claude
+Collaboration Framework, just applied to a different tool. Recommending
+`git init` + commit-per-milestone from here on so drift shows up as a diff
+instead of a mystery screenshot.
+
+## M6 — Failure Mode Testing (2026-09-20)
+
+Ran deliberate failure tests against the working build rather than just
+describing failure modes hypothetically. Found two real bugs:
+
+**1. Classification failures orphaned tickets.** Simulated a Gemini outage
+by breaking the API key. The ticket was created fine, but when
+classification failed, the old `/api/classify` returned an error and wrote
+nothing — no classification row, no audit log entry. That ticket became
+permanently invisible to both the review queue and the dashboard. Confirmed
+by checking the `classifications` table directly and finding no matching
+row for several test tickets. This is the exact "serious issue silently
+disappears" failure shape Alex described in discovery, just triggered by an
+AI outage instead of a human triage gap — genuinely useful to have proven
+this happens rather than just asserted the system "handles failure."
+
+Fixed by having `/api/classify` insert a fallback classification
+(`category: "other", confidence: 0`) on any AI failure instead of aborting.
+Confidence 0 automatically triggers the existing threshold rule in
+`lib/routing.ts`, routing it to the priority queue — no new routing logic
+needed, just a guarantee that a classification always exists so the ticket
+can't fall out of the system.
+
+**2. Empty POST bodies caused a bare 500.** `request.json()` throws on a
+truly empty body, and none of the routes caught that — so an empty request
+crashed before reaching the actual validation logic. Fixed by adding
+`lib/http.ts` with a shared `parseJsonBody` helper used across all four POST
+routes, so this is fixed once rather than patched four times inconsistently.
+
+Also confirmed a non-bug worth documenting: garbage input ("asdf") produced
+a *confident* "unclear/nonsensical" classification. Confidence measures the
+model's certainty about its own categorisation, not input quality — a model
+can correctly and confidently recognise nonsense. Documented in
+`docs/evaluation.md` so this isn't mistaken for a gap later.
+

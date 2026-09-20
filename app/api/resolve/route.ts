@@ -8,12 +8,27 @@
 // made this call" later.
 
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { decideRouting } from "@/lib/routing";
 import type { ClassificationResult, TicketCategory } from "@/lib/classification";
-import { getServiceClient } from "@/lib/supabaseServer";
+import { parseJsonBody } from "@/lib/http";
+
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  const { data: body, error: parseError } = await parseJsonBody<{
+    ticket_id?: string;
+  }>(request);
+
+  if (parseError || !body) {
+    return NextResponse.json({ error: parseError }, { status: 400 });
+  }
+
   const { ticket_id } = body;
 
   if (!ticket_id) {

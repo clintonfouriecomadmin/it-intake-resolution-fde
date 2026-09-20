@@ -5,10 +5,30 @@
 // requirement that these decisions always have human approval.
 
 import { NextResponse } from "next/server";
-import { getServiceClient } from "@/lib/supabaseServer";
+import { createClient } from "@supabase/supabase-js";
+import { parseJsonBody } from "@/lib/http";
+
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  const { data: body, error: parseError } = await parseJsonBody<{
+    ticket_id?: string;
+    reviewer_name?: string;
+    category?: string;
+    priority?: string;
+    assigned_to?: string;
+    notes?: string;
+  }>(request);
+
+  if (parseError || !body) {
+    return NextResponse.json({ error: parseError }, { status: 400 });
+  }
+
   const { ticket_id, reviewer_name, category, priority, assigned_to, notes } = body;
 
   if (!ticket_id || !reviewer_name || !priority || !assigned_to) {
