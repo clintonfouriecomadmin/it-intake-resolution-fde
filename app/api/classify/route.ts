@@ -17,16 +17,9 @@
 // low-confidence one, never silently dropped).
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { classifyTicket, ClassificationResult } from "@/lib/classification";
 import { parseJsonBody } from "@/lib/http";
-
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { getServiceClient } from "@/lib/supabaseServer";
 
 export async function POST(request: Request) {
   const { data: body, error: parseError } = await parseJsonBody<{
