@@ -6,7 +6,7 @@
 // deterministic decisions made in routing.ts (M3), never left to model
 // judgment even implicitly via prompt wording.
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 export type TicketCategory =
   | "hardware"
@@ -48,14 +48,14 @@ Categories that tend to be ERP or access related (e.g. "can't log into ERP", "ac
 Respond only with the structured JSON requested — no extra commentary.`;
 
 const responseSchema = {
-  type: "OBJECT",
+  type: Type.OBJECT,
   properties: {
-    category: { type: "STRING", enum: CATEGORIES },
-    extracted_issue: { type: "STRING" },
-    confidence: { type: "NUMBER" },
+    category: { type: Type.STRING, enum: CATEGORIES },
+    extracted_issue: { type: Type.STRING },
+    confidence: { type: Type.NUMBER },
   },
   required: ["category", "extracted_issue", "confidence"],
-} as const;
+};
 
 let cachedClient: GoogleGenAI | null = null;
 
