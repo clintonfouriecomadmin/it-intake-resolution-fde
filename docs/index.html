@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IT Intake &amp; Resolution — Forward-Deployed Engineering Case Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #10141A;
+    --surface: #171D26;
+    --border: #2A323D;
+    --text: #E7EAEE;
+    --muted: #8A94A3;
+    --amber: #F2A93B;
+    --teal: #3FC1B0;
+    --red: #D14343;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.55;
+  }
+
+  .mono {
+    font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  a { color: var(--amber); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.5rem;
+    background: rgba(16, 20, 26, 0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav .brand { font-weight: 600; font-size: 0.95rem; }
+  nav .links { display: flex; gap: 1.25rem; font-size: 0.9rem; flex-wrap: wrap; }
+  nav .links a { color: var(--muted); }
+  nav .links a:hover { color: var(--text); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+
+  section { padding: 4rem 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+
+  .prose { max-width: 680px; }
+
+  h1 {
+    font-size: clamp(2rem, 4.5vw, 3.1rem);
+    line-height: 1.15;
+    font-weight: 700;
+    margin: 0 0 1.25rem;
+    max-width: 780px;
+  }
+
+  .hero p.lede {
+    font-size: 1.15rem;
+    color: var(--muted);
+    max-width: 620px;
+    margin: 0 0 2rem;
+  }
+
+  .hero { padding-top: 4.5rem; }
+
+  .cta-row { display: flex; gap: 0.9rem; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-block;
+    padding: 0.7rem 1.3rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--amber); color: #10141A; }
+  .btn-primary:hover { background: #ffbb52; text-decoration: none; }
+  .btn-secondary { border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { border-color: var(--muted); text-decoration: none; }
+
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem;
+  }
+
+  .quote-block {
+    border-left: 3px solid var(--amber);
+    padding: 0.25rem 0 0.25rem 1.5rem;
+    margin: 1.5rem 0;
+    color: var(--text);
+    font-size: 1.05rem;
+  }
+  .quote-block .source {
+    display: block;
+    margin-top: 0.6rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .split-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+  @media (max-width: 800px) {
+    .split-grid { grid-template-columns: 1fr; }
+  }
+
+  .split-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--card-accent, var(--amber));
+    border-radius: 4px;
+    padding: 1.5rem;
+  }
+  .split-card h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .split-card ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+  .split-card li { margin-bottom: 0.4rem; }
+
+  .metric-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2.5rem;
+    text-align: left;
+  }
+  .metric-panel .value {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: clamp(3rem, 8vw, 5rem);
+    font-weight: 500;
+    color: var(--amber);
+    line-height: 1;
+    margin: 0.5rem 0;
+  }
+  .metric-panel .label {
+    color: var(--muted);
+    font-size: 1rem;
+  }
+  .metric-panel .context {
+    margin-top: 1.25rem;
+    max-width: 560px;
+    color: var(--text);
+  }
+
+  .incident {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .incident h3 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+  .incident .tag {
+    display: inline-block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.75rem;
+    color: var(--red);
+    border: 1px solid var(--red);
+    border-radius: 3px;
+    padding: 0.1rem 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .incident p { margin: 0.5rem 0; color: var(--muted); font-size: 0.94rem; }
+  .incident .fixed { color: var(--teal); }
+
+  .docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .doc-card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.25rem;
+  }
+  .doc-card:hover { border-color: var(--amber); text-decoration: none; }
+  .doc-card h3 { margin: 0 0 0.4rem; font-size: 1rem; color: var(--text); }
+  .doc-card p { margin: 0; font-size: 0.85rem; color: var(--muted); }
+
+  footer {
+    padding: 2.5rem 1.5rem 3rem;
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.9rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  footer a { color: var(--text); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero, .prose { animation: rise 0.5s ease-out; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">IT Intake &amp; Resolution</span>
+  <span class="links">
+    <a href="#problem">The Problem</a>
+    <a href="#split">The Split</a>
+    <a href="#metric">Outcome</a>
+    <a href="#incidents">What Broke</a>
+    <a href="#docs">Docs</a>
+  </span>
+</nav>
+
+<main>
+
+  <section class="hero">
+    <h1>An ERP outage once waited behind a printer complaint for half a day. This system exists so that doesn't happen again.</h1>
+    <p class="lede">
+      A ticket-triage system for a manufacturing company's IT helpdesk — built to
+      prove one specific skill: knowing exactly when to let AI decide something,
+      and when a human has to.
+    </p>
+    <div class="cta-row">
+      <!-- REPLACE_WITH_VERCEL_URL -->
+      <a class="btn btn-primary" href="REPLACE_WITH_VERCEL_URL">Open live demo</a>
+      <!-- REPLACE_WITH_GITHUB_REPO_URL -->
+      <a class="btn btn-secondary" href="REPLACE_WITH_GITHUB_REPO_URL">View on GitHub</a>
+    </div>
+  </section>
+
+  <section id="problem">
+    <div class="prose">
+      <h2>The problem, in the client's own words</h2>
+      <p>
+        Tickets arrived through three uncoordinated channels — an old inbox,
+        a Teams channel, and walk-ups. Two technicians triaged everything by
+        gut feel, with no documented priority rules. The failure mode wasn't
+        rare: it was structural.
+      </p>
+      <div class="quote-block">
+        Someone will write "wifi broken again" and it turns out their laptop
+        battery died. Someone else will write three paragraphs about a
+        printer and bury the actual urgent line — "also I can't access the
+        ERP system" — at the bottom.
+        <span class="source">— from the discovery interview</span>
+      </div>
+      <p>
+        The fix couldn't just be "add AI." It had to be a system where AI
+        does the part it's actually good at, and a human stays accountable
+        for everything that matters.
+      </p>
+    </div>
+  </section>
+
+  <section id="split">
+    <h2>The split that makes this work</h2>
+    <p class="prose" style="color: var(--muted); margin-top: -0.75rem;">
+      This came directly from a stakeholder interview, not a best-practice
+      template — see the full responsibility matrix in the discovery brief.
+    </p>
+    <div class="split-grid">
+      <div class="split-card" style="--card-accent: var(--teal);">
+        <h3>AI recommends</h3>
+        <ul>
+          <li>Categorise the ticket</li>
+          <li>Extract the real issue from rambling or unstructured text</li>
+        </ul>
+      </div>
+      <div class="split-card" style="--card-accent: var(--muted);">
+        <h3>Code decides routing</h3>
+        <ul>
+          <li>High-stakes category (ERP, access) → priority queue</li>
+          <li>Low classifier confidence → priority queue</li>
+          <li>Otherwise → standard queue</li>
+        </ul>
+      </div>
+      <div class="split-card" style="--card-accent: var(--amber);">
+        <h3>Human approves</h3>
+        <ul>
+          <li>Sets priority</li>
+          <li>Assigns a technician</li>
+          <li>Approves any escalation</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="metric">
+    <h2>Outcome</h2>
+    <div class="metric-panel">
+      <div class="label">Priority tickets reviewed within 15 minutes</div>
+      <div class="value mono">—%</div>
+      <p class="context">
+        This is the actual success criteria the stakeholder gave in
+        discovery, not a generic ticket-volume metric — wired directly to
+        the live dashboard. <span class="mono" style="color: var(--muted); font-size: 0.85rem;">/* replace —% with a live screenshot or current reading once demo data exists */</span>
+      </p>
+    </div>
+  </section>
+
+  <section id="incidents">
+    <h2>What actually broke, and how it was fixed</h2>
+    <p class="prose" style="color: var(--muted); margin-top: -0.75rem; margin-bottom: 1.75rem;">
+      Two real bugs, found by deliberately trying to break the system —
+      not hypothetical failure modes listed for completeness.
+    </p>
+
+    <div class="incident">
+      <span class="tag">FOUND IN TESTING</span>
+      <h3>A classification-provider outage silently deleted a ticket's future</h3>
+      <p>Simulating a Gemini outage showed the exact failure this project was
+      built to prevent — a ticket created, then invisible to every reviewer,
+      because a failed classification wrote nothing to the database.</p>
+      <p class="fixed">Fixed: classification failures now write a
+      confidence-zero fallback, which the existing routing rule sends
+      straight to the priority queue. No ticket can fall out of the system.</p>
+    </div>
+
+    <div class="incident">
+      <span class="tag">FOUND IN TESTING</span>
+      <h3>Stale dashboard reads under Next.js's App Router cache</h3>
+      <p>Next.js patches <span class="mono">fetch</span>, and the database
+      client's REST calls went through that same patched fetch — so reads
+      could stay cached independently of any route-level cache setting.</p>
+      <p class="fixed">Fixed: a shared database client forces
+      <span class="mono">cache: "no-store"</span> at the fetch level, paired
+      with route-level and app-level cache opt-outs.</p>
+    </div>
+  </section>
+
+  <section id="docs">
+    <h2>Read the write-ups</h2>
+    <div class="docs-grid">
+      <!-- REPLACE_WITH_GITHUB_REPO_URL used below in each blob link -->
+      <a class="doc-card" href="REPLACE_WITH_GITHUB_REPO_URL/blob/main/docs/discovery-brief.md">
+        <h3>Discovery Brief</h3>
+        <p>The stakeholder interview this whole system is built from.</p>
+      </a>
+      <a class="doc-card" href="REPLACE_WITH_GITHUB_REPO_URL/blob/main/docs/architecture.md">
+        <h3>Architecture</h3>
+        <p>The deterministic/AI/human split, explained and diagrammed.</p>
+      </a>
+      <a class="doc-card" href="REPLACE_WITH_GITHUB_REPO_URL/blob/main/docs/evaluation.md">
+        <h3>Evaluation</h3>
+        <p>Confidence threshold rationale and real failure-test results.</p>
+      </a>
+      <a class="doc-card" href="REPLACE_WITH_GITHUB_REPO_URL/blob/main/docs/build-journal.md">
+        <h3>Build Journal</h3>
+        <p>Real decisions, a caught modeling mistake, and two real bugs.</p>
+      </a>
+      <a class="doc-card" href="REPLACE_WITH_GITHUB_REPO_URL">
+        <h3>Full Repository</h3>
+        <p>Source, schema, and setup instructions.</p>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    Built by Clinton — Infrastructure Engineer &amp; Cloud Specialist
+    (Azure, Huawei Cloud), applying that background to a Forward-Deployed
+    Engineering portfolio project.
+  </p>
+  <!-- Optional: add your LinkedIn / contact link here -->
+</footer>
+
+</body>
+</html>
