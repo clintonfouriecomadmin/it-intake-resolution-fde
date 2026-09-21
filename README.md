@@ -11,7 +11,7 @@ and grounding in a real (simulated) stakeholder discovery process.
 
 **Status:** M8 — case study site built, project complete.
 
-- Live demo: _add your Vercel URL here_
+- Live demo: https://it-intake-resolution-fde.vercel.app/
 - Case study: _add your GitHub Pages URL here_
 - [Discovery Brief](docs/discovery-brief.md)
 - [Architecture](docs/architecture.md)
